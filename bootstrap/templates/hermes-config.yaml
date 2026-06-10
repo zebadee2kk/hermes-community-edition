@@ -1,0 +1,11 @@
+# Template configuration for Hermes Community Edition.
+# Exact Hermes config paths may vary by installation method and OS.
+
+provider: openrouter
+model: openrouter/owl-alpha
+base_url: https://openrouter.ai/api/v1
+api_key_env: OPENROUTER_API_KEY
+
+metadata:
+  app_title: Hermes Community Edition
+  referer: https://github.com/zebadee2kk/hermes-community-edition
