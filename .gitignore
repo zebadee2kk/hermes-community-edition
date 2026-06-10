@@ -1,0 +1,31 @@
+# Secrets and local config
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+*.p12
+*.pfx
+
+# OS/editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Logs/build
+*.log
+dist/
+build/
+node_modules/
+__pycache__/
+.pytest_cache/
+
+# Installer artefacts
+*.exe
+*.dmg
+*.pkg
+*.msi
+*.AppImage
+*.deb
+*.rpm
