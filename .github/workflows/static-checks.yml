@@ -1,0 +1,37 @@
+name: Static checks
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+jobs:
+  shell-syntax:
+    name: Shell syntax checks
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Bash syntax check
+        run: |
+          find . -name "*.sh" -print0 | while IFS= read -r -d '' file; do
+            echo "Checking $file"
+            bash -n "$file"
+          done
+
+  secret-patterns:
+    name: Simple secret pattern check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Check for obvious committed env files
+        run: |
+          if find . -name ".env" -o -name ".env.local" | grep -q .; then
+            echo "Local env file committed. Remove it."
+            exit 1
+          fi
+          echo "No local env files found."
