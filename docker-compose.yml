@@ -1,0 +1,86 @@
+name: hermes-community-edition
+
+services:
+  hermes-gateway:
+    build:
+      context: ./gateway
+      dockerfile: Dockerfile
+    container_name: hermes-gateway
+    restart: unless-stopped
+    ports:
+      - "${HERMES_GATEWAY_PORT:-8080}:8080"
+    environment:
+      - HERMES_MODEL_PROVIDER=${HERMES_MODEL_PROVIDER:-ollama}
+      - OLLAMA_BASE_URL=${OLLAMA_BASE_URL:-http://ollama:11434}
+      - OLLAMA_MODEL=${OLLAMA_MODEL:-llama3}
+      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY:-}
+      - HERMES_LOG_LEVEL=${HERMES_LOG_LEVEL:-INFO}
+    volumes:
+      - hermes-data:/data
+      - ./skills:/skills:ro
+    networks:
+      - hermes
+    depends_on:
+      hermes-db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  hermes-dashboard:
+    image: nginx:1.27-alpine
+    container_name: hermes-dashboard
+    restart: unless-stopped
+    ports:
+      - "${HERMES_DASHBOARD_PORT:-3000}:80"
+    volumes:
+      - ./dashboard:/usr/share/nginx/html:ro
+    networks:
+      - hermes
+    depends_on:
+      - hermes-gateway
+
+  hermes-db:
+    image: sqlite:latest
+    container_name: hermes-db
+    restart: unless-stopped
+    volumes:
+      - hermes-data:/data
+    networks:
+      - hermes
+    healthcheck:
+      test: ["CMD", "test", "-f", "/data/hermes.db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Optional: Ollama for local LLM
+  ollama:
+    image: ollama/ollama:latest
+    container_name: hermes-ollama
+    restart: unless-stopped
+    profiles:
+      - with-ollama
+    ports:
+      - "${OLLAMA_PORT:-11434}:11434"
+    volumes:
+      - ollama-data:/root/.ollama
+    networks:
+      - hermes
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+
+volumes:
+  hermes-data:
+  ollama-data:
+
+networks:
+  hermes:
+    driver: bridge
